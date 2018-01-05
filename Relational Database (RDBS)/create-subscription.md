@@ -25,23 +25,32 @@ Use this API operation when you want to create a new subscription.
 
 ### URI Parameters
 
-| Name | Type | Description | Req. |
-| --- | --- | --- | --- |
-| accountAlias | string | Short code for a particular account | Yes |
+|     Name     |  Type  |             Description             | Req. |
+| ------------ | ------ | ----------------------------------- | ---- |
+| accountAlias | string | Short code for a particular account | Yes  |
 
 ### Content Properties
 
-| Name | Type | Description | Req. |
-| --- | --- | --- | --- |
-| instanceType | string | One of MYSQL, MySQL_REPLICATION | Yes |
-| location | string | Datacenter id. Available datacenters are listed in [Get Datacenters method](get-datacenters.md) | Yes |
-| externalId | string | The hostname part of the connection string | Yes |
-| machineConfig | Object | Server provisioning information for cpu, memory, and storage | Yes |
-| backupRetentionDays | number | Number of days to retain database backups | Yes |
-| destinations | array | Server capacity notification destinations | No |
-| users | array | Initial database user account. | Yes |
-| backupTime | object | Time of day to run backups (UTC) | Yes |
+|         Name           |   Type  |                                                       Description                                                                                         | Req. |
+| ---------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
+| instanceType           | string  | One of MYSQL, MySQL_REPLICATION, MSSQL_WEB, MSSQL_STANDARD, MSSQL_ENTERPRISE                                                                              | Yes  |
+| location               | string  | Datacenter id. Available datacenters are listed in [Get Datacenters method](get-datacenters.md)                                                           | Yes  |
+| networkId              | string  | ID of the Customer's Network for the location provided (used only by MSSQL at this time).  This can be retrieved from the Get Network List API operation. | No   |
+| replicated             | boolean | Turns on replication for subscription (used only by MSSQL at this time).  Default: false.                                                                 | No   |
+| replica                | object  | Replication information secondary location and network (used only by MSSQL at this time).                                                                 | No   |
+| version                | string  | Database Engine version (MySQL - 5.6, 5.7) currently only used by MySQL.  Default: 5.7                                                                    | No   |
+| externalId             | string  | The hostname part of the connection string                                                                                                                | Yes  |
+| machineConfig          | object  | Server provisioning information for cpu, memory, and storage                                                                                              | Yes  |
+| backupRetentionDays    | number  | Number of days to retain database backups                                                                                                                 | Yes  |
+| destinations           | array   | Server capacity notification destinations                                                                                                                 | No   |
+| users                  | array   | Initial database user account.                                                                                                                            | Yes  |
+| backupTime             | object  | Time of day to run backups (UTC)                                                                                                                          | Yes  |
+| configurationProfileId | number |  ID of the configuration profile created by customer (only used for MySQL at this time).                                                                   | No   |
 
+### Replica Definition
+|    Name   |  Type  |                                           Description                                                                   | Req. |
+| location  | string | Datacenter id. Available datacenters are listed in [Get Datacenters method](get-datacenters.md)                         | Yes  |
+| networkId | string | ID of the Customer's Network for the location provided.  This can be retrieved from the Get Network List API operation. | Yes  |
 
 ### MachineConfig Definition
 
@@ -73,7 +82,7 @@ Use this API operation when you want to create a new subscription.
 | hour | number | Hour of day to start backup (UTC). | Yes |
 | minute | number | Minute of minute to start backup (UTC). | Yes |
 
-### Example
+### Examples
 
 ```json
 {
@@ -109,40 +118,111 @@ Use this API operation when you want to create a new subscription.
 }
 ```
 
+```json
+{
+  "instanceType": "MSSQL_WEB",
+  "location": "VA1",
+  "networkId": "a933432bd8894e84b6c4fb123e48cb8b",
+  "replicated": true,
+  "replica": {
+    "location": "NY1",
+    "networkId": "b977472bd8894e84b6c4fb123e48cb8a"
+  },
+  "externalId": "st-api-test",
+  "machineConfig": {
+      "cpu": 1,
+      "memory": 1,
+      "storage": 1
+   },
+   "backupRetentionDays": 7,
+   "destinations": [
+      {
+        "destinationType": "EMAIL",
+        "location": "foo@bar.com",
+        "notifications": [
+          "CPU_UTILIZATION",
+          "MEMORY_UTILIZATION"
+        ]
+      }
+    ],
+    "users": [
+     {
+       "name": "admin",
+       "password": "AstrongPW!"
+     }
+    ],
+    "backupTime": {
+      "hour": 9,
+      "minute": 15
+    }
+}
+```
 
 ## Response
 
 ### Entity Definition
 
-| Name | Type | Description |
-| --- | --- | --- |
-| id | number | Subscription id |
-| location | string | Datacenter id |
-| instanceType | string | Type of relational database. |
-| externalId | string | External id used in connection strings, etc. |
-| status | string | One of: Active, Backing Up, Configuring, Deleted, Failed, Pending, Ready, Restoring, Success, Terminated, Unknown |
-| backupTime | string | Scheduled backup time in "hour:minute" |
-| backupRetentionDays | string | Number of days to retain backups. |
-| servers | array | Servers implementing the subscription. Replicated subscriptions will have two servers. |
-| host | string | Host DNS name used in connection strings. |
-| port | string | Host port used in connection strings. |
-| certificate | string | TLS certificate used to secure subscription connections. |
+| Name                 |  Type   |                    Description                                                         |
+| -------------------- | ------- | -------------------------------------------------------------------------------------- |
+| id                   | number  | Subscription id                                                                        |
+| accountAlias         | string  | Customer account alias associated with subscription                                    |
+| location             | string  | Datacenter id                                                                          |
+| instanceType         | string  | Type of relational database.                                                           |
+| engine               | string  | Database engine type MSSQL, MySQL                                                      |
+| edition              | string  | MSSQL Edition Web, Standard, Enterprise                                                |
+| version              | string  | Database Engine Version                                                                |
+| externalId           | string  | External id used in connection strings, etc.                                           |
+| restartRequired      | boolean | Notification of if subscription needs restarting to apply changes                      |
+| status               | string  | One of: Active, Backing Up, Configuring, Restoring, Terminated                         |
+| replicationHealth    | string  | Health of replication - UP, Down, Unknown (Only used by MSSQL at this time)            |
+| backupTime           | string  | Scheduled backup time in "hour:minute"                                                 |
+| backupRetentionDays  | string  | Number of days to retain backups.                                                      |
+| servers              | array   | Servers implementing the subscription. Replicated subscriptions will have two servers. |
+| host                 | string  | Host DNS name used in connection strings.                                              |
+| port                 | string  | Host port used in connection strings.                                                  |
+| certificate          | string  | TLS certificate used to secure subscription connections.                               |
+| backups              | array   | List of all backup for subscription within retention period.                           |
+| configurationProfile | object  | Configuration Profile object representing current database configuration information   |
+| pendingJobCount      | number  | Current count of pending jobs being performed on subscription                          | 
+| replicated           | boolean | Boolean representing if subscription is replicated.                                    |
 
 ### Server Entity Definition
 
-| Name | Type | Description |
-| --- | --- | --- |
-| id | number | Server id |
-| alias | string | Server alias (hostname) |
-| location | string | Datacenter id where server is located |
-| cpu | number | Number of CPUs allocated to the server |
-| memory | number | Amount of RAM allocated to the server (GB) |
-| storage | number | Amount of disk storage allocated to the server (GB) |
-| attributes | object | Misc attributes for the server |
+|     Name    |  Type  |                                Description                                          |
+| ----------- | ------ | ----------------------------------------------------------------------------------- |
+| id          | number | Server id                                                                           |
+| alias       | string | Server alias (hostname)                                                             |
+| location    | string | Datacenter id where server is located                                               |
+| cpu         | number | Number of CPUs allocated to the server                                              |
+| memory      | number | Amount of RAM allocated to the server (GB)                                          |
+| storage     | number | Amount of disk storage allocated to the server (GB)                                 |
+| attributes  | object | Misc attributes for the server                                                      |
 | connections | number | Estimated number of concurrent connections possible given the server's RAM and CPU. |
 
+### Backup Entity Definition
 
-#### JSON
+|    Name    |  Type  |           Description            |
+| ---------- | ------ | -------------------------------- |
+| id         | number | Backup ID                        |
+| fileName   | string | File Name                        |
+| backupTime | number | Time of Backup                   |
+| backupType | string | Type of Backup AUTOMATED, MANUAL |
+| status     | string | Status SUCCESS, FAILED           |
+| size       | number | Total size in bytes of back file |
+
+### Configuration Profile Entity Definition
+
+|     Name     |   Type  |                    Description                          |
+| ------------ | ------- | ------------------------------------------------------- |
+| id           | number  | Configuration Profile ID                                |
+| name         | string  | Name of profile                                         |
+| description  | string  | Brief description of profile                            |
+| lastEditedBy | string  | Who last edited profile                                 |
+| lastEdited   | number  | Time of last edit                                       |
+| parameters   | object  | Map of key value paris of configuration profile changes |
+| isDefault    | boolean | Default profile for database engine                     |
+
+## Examples
 
 ```json
 {
@@ -169,6 +249,26 @@ Use this API operation when you want to create a new subscription.
   ],
   "host": "10.126.63.31",
   "port": 49562,
-  "certificate": "-----BEGIN CERTIFICATE-----....-----END CERTIFICATE-----"
-}}
+  "certificate": "-----BEGIN CERTIFICATE-----....-----END CERTIFICATE-----",
+  "backups": [
+    {
+      "id": 1,
+      "fileName": "1_2017-12-30T00:00:17Z",
+      "backupTime": 1514592017000,
+      "backupType": "Automated",
+      "status": "SUCCESS",
+      "size": 4853942
+    }
+  ],
+  "configurationProfile": {
+    "id": 1,
+    "name": "MySQL Default",
+    "description": "RDBS default MySQL Configuration",
+    "lastEditedBy": null,
+    "lastEdited": 1464189378000,
+    "parameters": {}
+  },
+  "pendingJobCount": 0,
+  "replicated": false
+}
 ```
