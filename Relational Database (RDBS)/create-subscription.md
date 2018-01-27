@@ -41,11 +41,12 @@ Use this API operation when you want to create a new subscription.
 | version                | string  | Database Engine version (MySQL - 5.6, 5.7) currently only used by MySQL.  Default: 5.7                                                                    | No   |
 | externalId             | string  | The hostname part of the connection string                                                                                                                | Yes  |
 | machineConfig          | object  | Server provisioning information for cpu, memory, and storage                                                                                              | Yes  |
+| backupLocationId       | number  | Backup location id available selections for each data center can be retrieved at [Get Datacenters method](get-datacenters.md)                             | Yes  |
 | backupRetentionDays    | number  | Number of days to retain database backups                                                                                                                 | Yes  |
 | destinations           | array   | Server capacity notification destinations                                                                                                                 | No   |
 | users                  | array   | Initial database user account.                                                                                                                            | Yes  |
 | backupTime             | object  | Time of day to run backups (UTC)                                                                                                                          | Yes  |
-| configurationProfileId | number |  ID of the configuration profile created by customer (only used for MySQL at this time).                                                                   | No   |
+| configurationProfileId | number  |  ID of the configuration profile created by customer (only used for MySQL at this time).                                                                  | No   |
 
 ### Replica Definition
 |    Name   |  Type  |                                           Description                                                                   | Req. |
@@ -94,6 +95,7 @@ Use this API operation when you want to create a new subscription.
     "memory": 1,
     "storage": 1
   },
+  "backupLocationId": 1,
   "backupRetentionDays": 7,
   "destinations": [
     {
@@ -134,6 +136,7 @@ Use this API operation when you want to create a new subscription.
       "memory": 1,
       "storage": 1
    },
+   "backupLocationId": 1,
    "backupRetentionDays": 7,
    "destinations": [
       {
@@ -185,19 +188,23 @@ Use this API operation when you want to create a new subscription.
 | configurationProfile | object  | Configuration Profile object representing current database configuration information   |
 | pendingJobCount      | number  | Current count of pending jobs being performed on subscription                          | 
 | replicated           | boolean | Boolean representing if subscription is replicated.                                    |
+| backupLocation       | string  | String represent the provider and region associated with selected backup location.     |
 
 ### Server Entity Definition
 
-|     Name    |  Type  |                                Description                                          |
-| ----------- | ------ | ----------------------------------------------------------------------------------- |
-| id          | number | Server id                                                                           |
-| alias       | string | Server alias (hostname)                                                             |
-| location    | string | Datacenter id where server is located                                               |
-| cpu         | number | Number of CPUs allocated to the server                                              |
-| memory      | number | Amount of RAM allocated to the server (GB)                                          |
-| storage     | number | Amount of disk storage allocated to the server (GB)                                 |
-| attributes  | object | Misc attributes for the server                                                      |
-| connections | number | Estimated number of concurrent connections possible given the server's RAM and CPU. |
+|     Name    |  Type   |                                Description                                          |
+| ----------- | ------- | ----------------------------------------------------------------------------------- |
+| id          | number  | Server id                                                                           |
+| alias       | string  | Server alias (hostname)                                                             |
+| location    | string  | Datacenter id where server is located                                               |
+| cpu         | number  | Number of CPUs allocated to the server                                              |
+| memory      | number  | Amount of RAM allocated to the server (GB)                                          |
+| storage     | number  | Amount of disk storage allocated to the server (GB)                                 |
+| status      | string  | Internal field used during configuration process to track changes.                  |
+| active      | boolean | Internal field used during configuration process to track changes.                  |
+| role        | string  | Used for denoting server role in replication PRIMARY or REPLICANT.                  |
+| health      | string  | Health of server UP, DOWN, UNKNOWN (Only used by MSSQL at this time)                |
+| connections | number  | Estimated number of concurrent connections possible given the server's RAM and CPU. |
 
 ### Backup Entity Definition
 
@@ -232,6 +239,7 @@ Use this API operation when you want to create a new subscription.
   "externalId": "st-api-test",
   "status": "Configuring",
   "backupTime": "9:15",
+  "backupLocation": "AWS - OREGON",
   "backupRetentionDays": 6,
   "servers": [
     {
@@ -241,9 +249,10 @@ Use this API operation when you want to create a new subscription.
       "cpu": 1,
       "memory": 1,
       "storage": 1,
-      "attributes": {
-        "INTERNAL_IP": "10.126.63.89"
-      },
+      "ipAddress": "10.126.63.89",
+      "status": "ACTIVE",
+      "active": true,
+      "role": "PRIMARY",
       "connections": 89
     }
   ],

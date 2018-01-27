@@ -36,7 +36,7 @@ Use this API operation when you want to create a subscription's notification. Su
 | --- | --- | --- | --- |
 | destinationType | string | `EMAIL`. | Yes |
 | recipient | string | Email address to send notificaitons to. | Yes |
-| notificationTypes | array | One of more of CPU\_UTILIZATION, STORAGE\_UTILIZATION. | Yes |
+| notificationTypes | array | One of more of RESOURCE\_EVENTS, AVAILABILITY\_EVENTS. | Yes |
 
 
 ## Response
@@ -48,7 +48,7 @@ Use this API operation when you want to create a subscription's notification. Su
 | id | number | Notification id. |
 | destinationType | string | `EMAIL` |
 | recipient | string | Email address the notification is delivered to. |
-| notificationTypes | array | One of more of CPU\_UTILIZATION, STORAGE\_UTILIZATION. |
+| notificationTypes | array | One of more of RESOURCE\_EVENTS, AVAILABILITY\_EVENTS. |
 | verified | boolean | True if the recipient has verified their email address through the notification verification email. |
 
 
@@ -61,9 +61,10 @@ Use this API operation when you want to create a subscription's notification. Su
     "destinationType": "EMAIL",
     "recipient": "wilfred@example.com",
     "notificationTypes": [
-      "CPU_UTILIZATION",
-      "STORAGE_UTILIZATION"
+      "RESOURCE_EVENTS",
+      "AVAILABILITY_EVENTS"
     ],
     "verified": false
   }
-]```
+]
+```
